@@ -1,0 +1,73 @@
+# Auto test command file for M5StickS3 simulator
+# Each line: F=front(confirm), N=side(next), B=side long(back), Q=quit
+# Starts from main menu, visits every screen, then quits
+
+# === Screen 0: Menu (already shown at startup) ===
+N
+N
+N
+# Front to select "Settings" (menu index 3)
+F
+# Now in Settings: Language
+# Front to toggle language
+F
+N
+# Now on MBTI Type - front to cycle
+F
+F
+F
+N
+# Now on WiFi - front to enter
+F
+# In WiFi screen
+B
+# Back to Settings
+B
+# Back to Menu
+
+# === Menu: select Answer Book ===
+N
+N
+N
+B
+# Wait - let's select slot machine first
+F
+# That selected top-right. Let's use N to get back to top-left
+B
+N
+N
+N
+N
+# Should be at Menu again, top item "Answer Book"
+F
+# Now in Answer Book
+F
+F
+F
+B
+
+# === Menu: select MBTI Advice ===
+N
+F
+# In MBTI
+N
+N
+N
+F
+F
+B
+
+# === Menu: select Lucky Slots ===
+N
+N
+F
+# In Slots (reels showing)
+# Start spin
+F
+# Wait - then stop
+F
+F
+F
+B
+
+Q

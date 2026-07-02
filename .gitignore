@@ -1,0 +1,22 @@
+# Build outputs
+.pio/
+build/
+build_sim/
+*.o
+*.elf
+*.bin
+*.map
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
