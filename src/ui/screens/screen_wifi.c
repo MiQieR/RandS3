@@ -20,24 +20,8 @@ static lv_obj_t *root = NULL;
 static lv_obj_t *title_lbl = NULL;
 static lv_obj_t *status_lbl = NULL;
 static lv_obj_t *ssid_lbl = NULL;
-static lv_obj_t *qr = NULL;
 static lv_timer_t *input_timer = NULL;
 static lv_timer_t *refresh_timer = NULL;
-
-static void rebuild_qr(void)
-{
-    if (qr) { lv_obj_del(qr); qr = NULL; }
-    const char *url = wifi_manager_ap_url();
-    if (!url) return;
-    qr = lv_qrcode_create(root, 76, lv_color_hex(0xFFFFFF), lv_color_hex(0x000000));
-    lv_qrcode_update(qr, url, strlen(url));
-    lv_obj_align(qr, LV_ALIGN_CENTER, 0, 4);
-    lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);  /* hidden by default - small display */
-
-    lv_obj_clear_flag(qr, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_set_size(qr, 100, 100);
-    lv_obj_align(qr, LV_ALIGN_TOP_MID, 0, 100);
-}
 
 static void render_status(void)
 {
@@ -55,12 +39,18 @@ static void render_status(void)
     case WIFI_STATUS_CONNECTED:
         lv_label_set_text(status_lbl, i18n_str(STR_CONNECTED));
         break;
+    case WIFI_STATUS_FAILED:
+        lv_label_set_text(status_lbl, i18n_str(STR_CONNECT_FAILED));
+        break;
+    case WIFI_STATUS_WRONG_PASSWORD:
+        lv_label_set_text(status_lbl, i18n_str(STR_WRONG_PASSWORD));
+        break;
     }
     const char *cfg_ssid = settings_get()->wifi_ssid;
     if (cfg_ssid[0]) {
         lv_label_set_text_fmt(ssid_lbl, "%s%s", i18n_str(STR_WIFI_CONNECT), cfg_ssid);
     } else {
-        lv_label_set_text(ssid_lbl, i18n_str(STR_SCAN_QR));
+        lv_label_set_text(ssid_lbl, "");
     }
 }
 
@@ -90,15 +80,16 @@ void screen_wifi_create(lv_obj_t *parent)
     lv_obj_set_size(status_lbl, 127, 20);
     lv_obj_set_style_text_color(status_lbl, COLOR_TEXT, 0);
     lv_obj_set_style_text_align(status_lbl, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_font(status_lbl, &lv_font_cn_16, 0);
 
     ssid_lbl = lv_label_create(parent);
     lv_obj_set_pos(ssid_lbl, 4, 68);
     lv_obj_set_size(ssid_lbl, 127, 28);
     lv_obj_set_style_text_color(ssid_lbl, COLOR_ACCENT2, 0);
     lv_obj_set_style_text_align(ssid_lbl, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_font(ssid_lbl, &lv_font_cn_16, 0);
     lv_label_set_long_mode(ssid_lbl, LV_LABEL_LONG_WRAP);
 
-    rebuild_qr();
     render_status();
 
     wifi_manager_start();
@@ -110,7 +101,6 @@ void screen_wifi_destroy(void)
 {
     if (input_timer)   { lv_timer_del(input_timer);   input_timer = NULL; }
     if (refresh_timer) { lv_timer_del(refresh_timer); refresh_timer = NULL; }
-    if (qr)            { lv_obj_del(qr);              qr = NULL; }
     root = title_lbl = status_lbl = ssid_lbl = NULL;
 }
 

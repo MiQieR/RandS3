@@ -53,6 +53,9 @@ typedef enum {
     STR_SCROLL_BTN,
     STR_BTN_A,
     STR_BTN_B,
+    STR_LOCK_SCREEN,
+    STR_WRONG_PASSWORD,
+    STR_CONNECT_FAILED,
     STR_COUNT /* must be last */
 } str_id_t;
 

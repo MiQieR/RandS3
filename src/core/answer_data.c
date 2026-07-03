@@ -55,14 +55,34 @@ static const answer_pair_t answers[] = {
 
 #define ANSWER_COUNT (sizeof(answers) / sizeof(answers[0]))
 
+static uint8_t s_indices[ANSWER_COUNT];
+static int s_current_idx = 0;
+
+static void shuffle_indices(void) {
+    for (int i = 0; i < ANSWER_COUNT; i++) {
+        s_indices[i] = i;
+    }
+    for (int i = ANSWER_COUNT - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        uint8_t temp = s_indices[i];
+        s_indices[i] = s_indices[j];
+        s_indices[j] = temp;
+    }
+}
+
 void answer_data_init(void)
 {
     srand(esp_random());
+    shuffle_indices();
 }
 
 const answer_pair_t *answer_data_random(void)
 {
-    return &answers[rand() % ANSWER_COUNT];
+    if (s_current_idx >= ANSWER_COUNT) {
+        shuffle_indices();
+        s_current_idx = 0;
+    }
+    return &answers[s_indices[s_current_idx++]];
 }
 
 int answer_data_count(void) { return (int)ANSWER_COUNT; }

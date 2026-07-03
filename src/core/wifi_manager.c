@@ -37,8 +37,7 @@ static esp_netif_t *s_ap_netif = NULL;
 static esp_netif_t *s_sta_netif = NULL;
 static bool s_started = false;
 
-#define AP_SSID_FMT "M5StickS3-%02X%02X"
-static char s_ap_ssid[32] = {0};
+static char s_ap_ssid[32] = "RandS3";
 static const char *AP_URL = "http://192.168.4.1/";
 
 /* ============ Scan & dispatch ============ */
@@ -78,18 +77,20 @@ static esp_err_t index_handler(httpd_req_t *req)
         "ul{list-style:none;padding:0;margin:0;}"
         "li{padding:6px;border-bottom:1px solid #3d3f5e;cursor:pointer;}"
         "li:hover{background:#3d3f5e;}</style></head><body>");
-    httpd_resp_sendstr_chunk(req, "<h1>M5StickS3 WiFi Setup</h1>");
+    httpd_resp_sendstr_chunk(req, "<h1>WiFi Setup</h1>");
     httpd_resp_sendstr_chunk(req, "<form method=POST action=/connect>"
-        "<label>Network</label><select name=ssid id=ssid>");
+        "<label>Network</label><input type=text id=ssid name=ssid>");
+    httpd_resp_sendstr_chunk(req, "<label>Password</label>"
+        "<input type=password name=pass><button type=submit>Connect</button></form>");
+    httpd_resp_sendstr_chunk(req, "<ul>");
     for (int i = 0; i < n; i++) {
-        char line[128];
-        snprintf(line, sizeof(line), "<option value=\"%s\">%s (ch %d, %d dBm)</option>",
+        char line[256];
+        snprintf(line, sizeof(line), "<li onclick=\"document.getElementById('ssid').value='%s'\">%s (ch %d, %d dBm)</li>",
             (char *)ap[i].ssid, (char *)ap[i].ssid, ap[i].primary, ap[i].rssi);
         httpd_resp_sendstr_chunk(req, line);
     }
     free(ap);
-    httpd_resp_sendstr_chunk(req, "</select><label>Password</label>"
-        "<input type=password name=pass><button type=submit>Connect</button></form></body></html>");
+    httpd_resp_sendstr_chunk(req, "</ul></body></html>");
     httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
@@ -175,11 +176,6 @@ static void stop_server(void)
 
 static esp_err_t ap_start(void)
 {
-    /* Generate AP SSID with last 4 hex of MAC */
-    uint8_t mac[6] = {0};
-    esp_wifi_get_mac(WIFI_IF_AP, mac);
-    snprintf(s_ap_ssid, sizeof(s_ap_ssid), AP_SSID_FMT, mac[4], mac[5]);
-
     esp_netif_init();
     esp_event_loop_create_default();
 
@@ -214,7 +210,16 @@ static void dispatch_wifi_event(int32_t event_id, void *event_data)
         s_status = WIFI_STATUS_CONNECTED;
         ESP_LOGI(TAG, "STA connected");
     } else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_status != WIFI_STATUS_AP_READY) s_status = WIFI_STATUS_FAILED;
+        if (s_status == WIFI_STATUS_CONNECTING_TO_AP || s_status == WIFI_STATUS_CONNECTED) {
+            wifi_event_sta_disconnected_t *disconn = (wifi_event_sta_disconnected_t *)event_data;
+            if (disconn->reason == WIFI_REASON_AUTH_EXPIRE ||
+                disconn->reason == WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT ||
+                disconn->reason == WIFI_REASON_HANDSHAKE_TIMEOUT) {
+                s_status = WIFI_STATUS_WRONG_PASSWORD;
+            } else {
+                s_status = WIFI_STATUS_FAILED;
+            }
+        }
     } else if (event_id == IP_EVENT_STA_GOT_IP) {
         s_status = WIFI_STATUS_CONNECTED;
     }
@@ -237,7 +242,7 @@ void wifi_manager_stop(void)
 }
 
 wifi_status_t wifi_manager_get_status(void) { return s_status; }
-const char *wifi_manager_ap_ssid(void) { return s_ap_ssid[0] ? s_ap_ssid : "M5StickS3-Setup"; }
+const char *wifi_manager_ap_ssid(void) { return s_ap_ssid; }
 const char *wifi_manager_ap_url(void)  { return AP_URL; }
 
 #else

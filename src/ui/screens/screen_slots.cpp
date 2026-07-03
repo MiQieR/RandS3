@@ -18,12 +18,14 @@ static int current_difficulty = 0; // HARD=0, EASY=10, MEDIUM=20
 #define FLUSH_DELAY 100
 #define FLUSH_COUNT 10
 
-enum SlotsState { SLOTS_INIT, SLOTS_START, SLOTS_STOP_BASE = 1, SLOTS_FLUSH = 99, SLOTS_END = 100 };
-static int state = SLOTS_INIT;
+// SLOTS_INTRO = 先显示说明页，等待按键后进入游戏
+enum SlotsState { SLOTS_INTRO = -1, SLOTS_INIT, SLOTS_START, SLOTS_STOP_BASE = 1, SLOTS_FLUSH = 99, SLOTS_END = 100 };
+static int state = SLOTS_INTRO;
 static int spin_count = 0;
 
 static unsigned long flushTick = 0;
 static int flushCount = 0;
+static bool needs_intro_draw = false;
 
 static void reset_slots() {
     M5.Lcd.fillScreen(TFT_BLACK);
@@ -35,28 +37,135 @@ static void reset_slots() {
     state = SLOTS_INIT;
 }
 
+/**
+ * 绘制进入老虎机时的说明页
+ * 直接用 M5GFX 绘制，完全绕开 LVGL 残留的 DMA 地址窗口问题
+ */
+static void draw_intro_screen() {
+    M5.Lcd.fillScreen(TFT_BLACK);
+
+    // ── 标题栏（橙色背景）──────────────────────────────────
+    M5.Lcd.fillRect(0, 0, 240, 28, 0xC600);   // 深橙色背景
+    M5.Lcd.setTextColor(TFT_WHITE, 0xC600);
+    
+    int lang = settings_get()->language;
+
+    if (lang == 1) {
+        M5.Lcd.setFont(&fonts::efontCN_16);
+        M5.Lcd.setTextSize(1);
+        M5.Lcd.setCursor(76, 6);
+        M5.Lcd.print("老虎机");
+    } else {
+        M5.Lcd.setFont(nullptr);
+        M5.Lcd.setTextSize(2);
+        M5.Lcd.setCursor(34, 7);
+        M5.Lcd.print(" SLOT MACHINE ");
+    }
+
+    // ── 分割线 ──────────────────────────────────────────────
+    M5.Lcd.drawFastHLine(0, 29, 240, 0xFFE0); // 黄色线
+
+    // ── 操作说明 ────────────────────────────────────────────
+    if (lang == 1) {
+        M5.Lcd.setTextColor(0x07FF, TFT_BLACK);   // 青色标题
+        M5.Lcd.setCursor(8, 38);
+        M5.Lcd.print("游玩方法:");
+
+        M5.Lcd.setTextColor(0xFFFF, TFT_BLACK);   // 白色说明
+        M5.Lcd.setCursor(8, 56);
+        M5.Lcd.print("[A] 转动 / 停止");
+        M5.Lcd.setCursor(8, 72);
+        M5.Lcd.print("[B] 更改卷轴数");
+        M5.Lcd.setCursor(8, 88);
+        M5.Lcd.print("[B 长按] 返回菜单");
+    } else {
+        M5.Lcd.setFont(nullptr);
+        M5.Lcd.setTextSize(1);
+        M5.Lcd.setTextColor(0x07FF, TFT_BLACK);   // 青色标题
+        M5.Lcd.setCursor(8, 38);
+        M5.Lcd.print("HOW TO PLAY");
+
+        M5.Lcd.setTextColor(0xFFFF, TFT_BLACK);   // 白色说明
+        M5.Lcd.setCursor(8, 52);
+        M5.Lcd.print("[A] Spin / Stop reel");
+        M5.Lcd.setCursor(8, 64);
+        M5.Lcd.print("[B] Change reel count");
+        M5.Lcd.setCursor(8, 76);
+        M5.Lcd.print("[B hold] Back to menu");
+    }
+
+    // ── 分割线 ──────────────────────────────────────────────
+    M5.Lcd.drawFastHLine(0, 106, 240, 0x4208); // 深灰线
+
+    // ── 难度提示 ────────────────────────────────────────────
+    M5.Lcd.setTextColor(0xFD20, TFT_BLACK);   // 橙色
+    M5.Lcd.setCursor(140, 38);
+    
+    if (lang == 1) {
+        const char *diff_str = "简单";
+        if (current_difficulty == 0)       diff_str = "困难";
+        else if (current_difficulty == 20) diff_str = "中等";
+        M5.Lcd.print("难度: ");
+        M5.Lcd.print(diff_str);
+        
+        M5.Lcd.setTextColor(0xBDD7, TFT_BLACK);   // 浅蓝灰
+        M5.Lcd.setCursor(140, 56);
+        char buf[32];
+        snprintf(buf, sizeof(buf), "卷轴数: %d", current_slot_count);
+        M5.Lcd.print(buf);
+    } else {
+        M5.Lcd.setFont(nullptr);
+        const char *diff_str = "Easy";
+        if (current_difficulty == 0)       diff_str = "Hard";
+        else if (current_difficulty == 20) diff_str = "Med";
+        M5.Lcd.print("Difficulty: ");
+        M5.Lcd.print(diff_str);
+        
+        M5.Lcd.setTextColor(0xBDD7, TFT_BLACK);   // 浅蓝灰
+        M5.Lcd.setCursor(140, 52);
+        char buf[32];
+        snprintf(buf, sizeof(buf), "Reels: %d", current_slot_count);
+        M5.Lcd.print(buf);
+    }
+
+    // ── 底部提示条 ──────────────────────────────────────────
+    M5.Lcd.fillRect(0, 115, 240, 20, 0x0862); // 深蓝底
+    M5.Lcd.setTextColor(0x07FF, 0x0862);      // 青色字
+    
+    if (lang == 1) {
+        M5.Lcd.setFont(&fonts::efontCN_16);
+        M5.Lcd.setCursor(45, 117);
+        M5.Lcd.print("按下 [A] 开始游戏!");
+    } else {
+        M5.Lcd.setFont(nullptr);
+        M5.Lcd.setCursor(45, 120);
+        M5.Lcd.print("Press [A] to start!");
+    }
+    
+    M5.Lcd.setFont(nullptr); // Reset font
+}
+
 void screen_slots_create(lv_obj_t *parent)
 {
-    // Suspend LVGL drawing for this screen
+    // 暂停 LVGL 渲染（隐藏顶层）
     slots_active = true;
     lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_HIDDEN);
     
-    // Set landscape rotation and byteswap
+    // 设置横屏旋转 + 字节序
     M5.Lcd.setRotation(1);
-    M5.Lcd.setClipRect(0, 0, 240, 135);
-    M5.Lcd.clearClipRect();
-    M5.Lcd.setWindow(0, 0, 240, 135);
     M5.Lcd.setSwapBytes(true);
-    M5.Lcd.fillScreen(TFT_BLACK);
 
-    // Initialize slots based on global settings
+    // 初始化老虎机参数（但暂不绘制转盘）
     current_slot_count = settings_get()->slot_reel_count;
-    int diff = settings_get()->slot_difficulty;
-    current_difficulty = (diff == 0) ? 10 : (diff == 1 ? 20 : 0); // EASY=10, MEDIUM=20, HARD=0
-    
+    int diff = settings_get()->slot_difficulty; // 0 = hard, 1 = easy, 2 = medium
+    current_difficulty = (diff == 0) ? 0 : (diff == 1 ? 10 : 20);
+
     Slot::initShadow();
     Slot::setReel(symbolIndices, sizeof(symbolIndices)/sizeof(symbolIndices[0]));
-    reset_slots();
+
+    // 标记需要绘制说明页（在 slots_loop 第一帧绘制，避开 LVGL flush）
+    state = SLOTS_INTRO;
+    needs_intro_draw = true;
 }
 
 void screen_slots_destroy(void)
@@ -92,10 +201,10 @@ extern "C" void slots_loop(void)
 
     if (new_rotation != current_rotation) {
         M5.Lcd.setRotation(new_rotation);
-        M5.Lcd.setClipRect(0, 0, 240, 135);
-        M5.Lcd.clearClipRect();
-        M5.Lcd.setWindow(0, 0, 240, 135);
-        if (state != SLOTS_INIT) {
+        if (state == SLOTS_INTRO) {
+            // 旋转后重绘说明页
+            draw_intro_screen();
+        } else {
             M5.Lcd.fillScreen(TFT_BLACK);
             for (int i = 0; i < current_slot_count; i++) {
                 slots_obj[i].draw();
@@ -106,11 +215,31 @@ extern "C" void slots_loop(void)
     unsigned long tick = millis();
     input_event_t ev = app_manager_get_input();
 
-    if (ev == INPUT_BACK) { // Long press Side Button
+    if (ev == INPUT_BACK) { // 长按侧键返回菜单
         app_manager_show_menu();
         return;
-    } 
-    else if (ev == INPUT_NEXT) { // Short press Side Button (change reel count)
+    }
+
+    // ── 说明页状态：按任意键进入游戏 ─────────────────────────
+    if (state == SLOTS_INTRO) {
+        if (needs_intro_draw) {
+            draw_intro_screen();
+            needs_intro_draw = false;
+        }
+
+        if (ev == INPUT_CONFIRM || ev == INPUT_NEXT) {
+            // 强制清空 LCD 地址窗口后再初始化转盘
+            M5.Lcd.startWrite();
+            M5.Lcd.setAddrWindow(0, 0, 240, 135);
+            M5.Lcd.endWrite();
+            reset_slots(); // 设置 state = SLOTS_INIT
+        }
+        // 说明页期间不执行后续逻辑
+        delay(LOOP_WAIT);
+        return;
+    }
+
+    if (ev == INPUT_NEXT) { // 短按侧键：切换轮盘数量
         if (state == SLOTS_INIT) {
             current_slot_count++;
             if (current_slot_count > MAX_SLOT_COUNT) current_slot_count = 3;

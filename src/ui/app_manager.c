@@ -16,7 +16,12 @@
 #include "screen_slot_settings.h"
 #include "screen_wifi.h"
 #include "sys_info.h"
+#include "settings.h"
 #include <stdio.h>
+
+static uint32_t last_interaction_tick = 0;
+static bool is_screen_off = false;
+static bool is_dimmed = false;
 
 static lv_obj_t *top_bar = NULL;
 static lv_obj_t *time_lbl = NULL;
@@ -61,6 +66,30 @@ static void update_status_bar(lv_timer_t *t)
 
     int batt = sys_info_get_battery();
     lv_label_set_text_fmt(batt_lbl, "%d%%", batt);
+
+    /* Idle power management */
+    uint32_t idle_ms = lv_tick_get() - last_interaction_tick;
+    int ls_setting = settings_get()->lock_screen_time;
+    uint32_t lock_ms = 30000;
+    if (ls_setting == 0) lock_ms = 15000;
+    else if (ls_setting == 1) lock_ms = 30000;
+    else if (ls_setting == 2) lock_ms = 60000;
+    else if (ls_setting == 3) lock_ms = 120000;
+
+    if (!is_screen_off && !is_dimmed && lock_ms > 5000 && idle_ms > (lock_ms - 5000)) {
+        sys_info_set_brightness(30);
+        is_dimmed = true;
+    } else if (!is_screen_off && idle_ms > lock_ms) {
+        sys_info_set_brightness(0);
+        is_screen_off = true;
+    } else if (is_screen_off && idle_ms > (lock_ms + 60000)) {
+        sys_info_light_sleep();
+        /* execution resumes here after wake */
+        last_interaction_tick = lv_tick_get();
+        sys_info_set_brightness(100);
+        is_screen_off = false;
+        is_dimmed = false;
+    }
 }
 
 void app_manager_init(void)
@@ -96,6 +125,8 @@ void app_manager_init(void)
 
     status_timer = lv_timer_create(update_status_bar, 1000, NULL);
     update_status_bar(status_timer);
+
+    last_interaction_tick = lv_tick_get();
 
     /* Each screen root is created on demand; first call to app_manager_show
      * creates the menu and the others lazily when visited. */
@@ -133,6 +164,15 @@ input_event_t app_manager_get_input(void)
 {
     input_event_t e = pending;
     pending = INPUT_NONE;
+    if (e != INPUT_NONE) {
+        last_interaction_tick = lv_tick_get();
+        if (is_screen_off || is_dimmed) {
+            sys_info_set_brightness(100);
+            is_screen_off = false;
+            is_dimmed = false;
+            return INPUT_NONE; /* Consume the wake-up press */
+        }
+    }
     return e;
 }
 

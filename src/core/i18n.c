@@ -50,6 +50,9 @@ static const char *en_strings[STR_COUNT] = {
     [STR_SCROLL_BTN]     = "Scroll",
     [STR_BTN_A]          = "A",
     [STR_BTN_B]          = "B",
+    [STR_LOCK_SCREEN]    = "Lock Scrn",
+    [STR_WRONG_PASSWORD] = "Wrong Password",
+    [STR_CONNECT_FAILED] = "Connect Failed",
 };
 
 /* ---------- Chinese strings (UTF-8) ---------- */
@@ -96,6 +99,9 @@ static const char *zh_strings[STR_COUNT] = {
     [STR_SCROLL_BTN]     = "滚动按键",
     [STR_BTN_A]          = "A",
     [STR_BTN_B]          = "B",
+    [STR_LOCK_SCREEN]    = "锁屏时间",
+    [STR_WRONG_PASSWORD] = "密码错误",
+    [STR_CONNECT_FAILED] = "连接失败",
 };
 
 const char *i18n_str(str_id_t id)

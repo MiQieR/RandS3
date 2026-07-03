@@ -23,15 +23,16 @@ extern void screen_wifi_register(void);
 
 static lv_obj_t *root = NULL;
 static lv_obj_t *title_lbl = NULL;
-static lv_obj_t *rows[5] = {NULL};
-static lv_obj_t *row_labels[5] = {NULL};
-static lv_obj_t *row_values[5] = {NULL};
+static lv_obj_t *rows[6] = {NULL};
+static lv_obj_t *row_labels[6] = {NULL};
+static lv_obj_t *row_values[6] = {NULL};
 static lv_timer_t *input_timer = NULL;
 
 static int selected = 0;
-static const int ROW_COUNT = 5;  /* 0=lang, 1=mbti, 2=wifi, 3=slot_settings, 4=scroll_btn */
+static const int ROW_COUNT = 6;  /* 0=lang, 1=mbti, 2=wifi, 3=slot_settings, 4=scroll_btn, 5=lock_screen */
 
 static const char *lang_names[2] = { "Eng", "中文" };
+static const char *lock_times[4] = { "15s", "30s", "1m", "2m" };
 
 static void render(void)
 {
@@ -54,6 +55,11 @@ static void render(void)
 
     lv_label_set_text(row_labels[4], i18n_str(STR_SCROLL_BTN));
     lv_label_set_text(row_values[4], settings_get()->scroll_btn ? i18n_str(STR_BTN_A) : i18n_str(STR_BTN_B));
+
+    lv_label_set_text(row_labels[5], i18n_str(STR_LOCK_SCREEN));
+    int ls = settings_get()->lock_screen_time;
+    if (ls < 0 || ls > 3) ls = 1;
+    lv_label_set_text(row_values[5], lock_times[ls]);
 
     for (int i = 0; i < ROW_COUNT; i++) {
         bool sel = (i == selected);
@@ -98,6 +104,10 @@ static void on_input_timer(lv_timer_t *t)
         } else if (selected == 4) {
             int b = settings_get()->scroll_btn ^ 1;
             settings_set_scroll_btn(b);
+            render();
+        } else if (selected == 5) {
+            int ls = (settings_get()->lock_screen_time + 1) % 4;
+            settings_set_lock_screen_time(ls);
             render();
         }
     }

@@ -15,7 +15,8 @@ typedef enum {
     WIFI_STATUS_AP_READY,
     WIFI_STATUS_CONNECTING_TO_AP,
     WIFI_STATUS_CONNECTED,
-    WIFI_STATUS_FAILED
+    WIFI_STATUS_FAILED,
+    WIFI_STATUS_WRONG_PASSWORD
 } wifi_status_t;
 
 void            wifi_manager_start(void);

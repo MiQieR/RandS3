@@ -6,11 +6,12 @@ M5Stack StickS3 Duplication of Rand/0 - The Pocket Prophet
 
 - **Global Status Bar** – Immersive status bar showing time, WiFi status, and battery, consistent across all screens.
 - **Vertical Orientation UX** – 135x240 optimized vertical layout with long-press scrolling gesture support on lengthy texts.
-- **Answer Book** (答案之书) – random bilingual answers.
+- **Answer Book** (答案之书) – random bilingual answers with Fisher-Yates non-repeating shuffle.
 - **MBTI Advice** – browse 16 personality types with growth advice.
 - **Lucky Slots** – slot machine game with 3/4/5 reels, built-in IMU screen-rotation, and speaker sound effects.
-- **WiFi Provisioning** – AP mode with QR code, web-based WiFi setup.
-- **Settings** – language (EN/ZH), MBTI type, WiFi, scrolling button config, and dedicated Lucky Slots settings (difficulty, volume).
+- **WiFi Provisioning** – AP mode (RandS3, no password), modern web-based WiFi setup with error status reporting.
+- **Power Management** - 3-stage adaptive sleep (Dim -> Screen Off -> Light Sleep) configurable via settings.
+- **Settings** – language (EN/ZH), MBTI type, WiFi, lock screen timeout, scrolling button config, and dedicated Lucky Slots settings (difficulty, volume).
 
 ## Hardware
 

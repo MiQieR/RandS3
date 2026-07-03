@@ -22,6 +22,12 @@ bool sys_info_get_wifi_connected(void);
  */
 void sys_info_get_time_str(char *buf, size_t len);
 
+/**
+ * Power management
+ */
+void sys_info_set_brightness(int brightness);
+void sys_info_light_sleep(void);
+
 #ifdef __cplusplus
 }
 #endif

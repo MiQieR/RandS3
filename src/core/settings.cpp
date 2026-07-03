@@ -30,6 +30,7 @@ static const user_settings_t defaults = {
     /* slot_difficulty */ 1,
     /* slot_volume */     1,
     /* scroll_btn */      1,
+    /* lock_screen_time*/ 1, // default 30s
     /* wifi_ssid */       {0},
     /* wifi_pass */       {0},
 };
@@ -120,6 +121,15 @@ void settings_set_scroll_btn(int btn)
 {
     if (!s_initialized) settings_init();
     s_settings.scroll_btn = btn ? 1 : 0;
+    settings_save();
+}
+
+void settings_set_lock_screen_time(int time_idx)
+{
+    if (!s_initialized) settings_init();
+    if (time_idx < 0) time_idx = 0;
+    if (time_idx > 3) time_idx = 3;
+    s_settings.lock_screen_time = time_idx;
     settings_save();
 }
 
