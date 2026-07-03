@@ -13,6 +13,7 @@
 extern "C" {
 #include "app_manager.h"
 #include "ui_theme.h"
+#include "wifi_manager.h"
 #include "i18n.h"
 #include "settings.h"
 #include "answer_data.h"
@@ -109,6 +110,8 @@ void setup()
 
     /* LVGL init */
     lv_init();
+    /* NOTE: lv_png_init() is called automatically inside lv_init() -> lv_extra_init()
+     * when LV_USE_PNG=1. Do NOT call it again here. */
 
     /* Display buffers in PSRAM */
     buf1 = (lv_color_t *)heap_caps_malloc(
@@ -135,6 +138,7 @@ void setup()
     lv_indev_drv_register(&indev_drv);
 
     /* App UI */
+    wifi_manager_init();
     ui_theme_init();
     app_manager_init();
 }

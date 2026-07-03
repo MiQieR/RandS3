@@ -1,0 +1,46 @@
+[
+    {
+        "name": "Default",
+        "bg_dark": "0x1A1B2E",
+        "bg_panel": "0x252642",
+        "accent": "0x00D4AA",
+        "accent2": "0xFF6B9D",
+        "warning": "0xFFB800",
+        "text": "0xFFFFFF",
+        "text_dim": "0xB5B5C3",
+        "border": "0x3D3F5E"
+    },
+    {
+        "name": "Apple",
+        "bg_dark": "0xF3F4F6",
+        "bg_panel": "0xFFFFFF",
+        "accent": "0x3B82F6",
+        "accent2": "0xEF4444",
+        "warning": "0xF59E0B",
+        "text": "0x1F2937",
+        "text_dim": "0x9CA3AF",
+        "border": "0xE5E7EB"
+    },
+    {
+        "name": "GitHub Dark",
+        "bg_dark": "0x101114",
+        "bg_panel": "0x1E1F22",
+        "accent": "0x58A6FF",
+        "accent2": "0xF85149",
+        "warning": "0xD29922",
+        "text": "0xC9D1D9",
+        "text_dim": "0x8B949E",
+        "border": "0x30363D"
+    },
+    {
+        "name": "Cyber",
+        "bg_dark": "0x071C2C",
+        "bg_panel": "0x12344D",
+        "accent": "0x3FC7FF",
+        "accent2": "0xFF003C",
+        "warning": "0xFCE205",
+        "text": "0xFFFFFF",
+        "text_dim": "0x7AB4E1",
+        "border": "0x1F5279"
+    }
+]

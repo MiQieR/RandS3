@@ -31,8 +31,10 @@ static const user_settings_t defaults = {
     /* slot_volume */     1,
     /* scroll_btn */      1,
     /* lock_screen_time*/ 1, // default 30s
+    /* theme_index */     0,
     /* wifi_ssid */       {0},
     /* wifi_pass */       {0},
+    /* wifi_enable */     0,
 };
 
 /* ── Public C-linkage API ────────────────────────────────────────────────── */
@@ -140,6 +142,20 @@ void settings_set_wifi(const char *ssid, const char *pass)
     strncpy(s_settings.wifi_pass, pass ? pass : "", sizeof(s_settings.wifi_pass) - 1);
     s_settings.wifi_ssid[sizeof(s_settings.wifi_ssid) - 1] = '\0';
     s_settings.wifi_pass[sizeof(s_settings.wifi_pass) - 1] = '\0';
+    settings_save();
+}
+
+void settings_set_theme(int idx)
+{
+    if (!s_initialized) settings_init();
+    s_settings.theme_index = idx;
+    settings_save();
+}
+
+void settings_set_wifi_enable(int enable)
+{
+    if (!s_initialized) settings_init();
+    s_settings.wifi_enable = enable ? 1 : 0;
     settings_save();
 }
 

@@ -44,8 +44,8 @@
 #define LV_USE_MSGBOX            1
 #define LV_USE_SPINNER           1
 #define LV_USE_QRCODE            1
-#define LV_USE_THEME_DEFAULT     1
 #define LV_USE_THEME_BASIC       1
+#define LV_USE_PNG               1
 
 #define LV_USE_DEMO_WIDGETS      0
 #define LV_USE_DEMO_MUSIC        0

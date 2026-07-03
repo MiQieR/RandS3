@@ -1,13 +1,5 @@
 /**
- * wifi_manager.c - AP mode + HTTP provisioning server
- *
- * Provides:
- *   - SoftAP "M5StickS3-Setup" open
- *   - DNS server (captive portal)
- *   - HTTP server with scan + connect pages
- *
- * On successful POST, credentials are stored in NVS and station-mode
- * connection is attempted; AP remains up so the user can still browse.
+ * wifi_manager.c - WiFi management and AP provisioning
  */
 #include "wifi_manager.h"
 #include "settings.h"
@@ -35,33 +27,26 @@ static wifi_status_t s_status = WIFI_STATUS_AP_STARTING;
 static httpd_handle_t s_server = NULL;
 static esp_netif_t *s_ap_netif = NULL;
 static esp_netif_t *s_sta_netif = NULL;
-static bool s_started = false;
+static bool s_ap_started = false;
 
 static char s_ap_ssid[32] = "RandS3";
 static const char *AP_URL = "http://192.168.4.1/";
 
-/* ============ Scan & dispatch ============ */
-
 static void dispatch_wifi_event(int32_t event_id, void *event_data);
-static esp_err_t ap_start(void);
 static void start_server(void);
 static void stop_server(void);
 
-/* ============ HTML ============ */
-
 static esp_err_t index_handler(httpd_req_t *req)
 {
-    /* Run a scan to build network list */
     wifi_scan_config_t cfg = {0};
     esp_wifi_scan_start(&cfg, true);
     uint16_t n = 0;
     esp_wifi_scan_get_ap_num(&n);
     wifi_ap_record_t *ap = NULL;
     if (n > 32) n = 32;
-    if (n > 0) ap = calloc(n, sizeof(*ap));
+    if (n > 0) ap = (wifi_ap_record_t *)calloc(n, sizeof(*ap));
     if (ap) esp_wifi_scan_get_ap_records(&n, ap);
 
-    /* Build HTML */
     httpd_resp_set_type(req, "text/html");
     httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><head><meta charset=utf-8>"
         "<meta name=viewport content=\"width=device-width,initial-scale=1\">"
@@ -104,7 +89,7 @@ static esp_err_t connect_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
     buf[r] = 0;
-    /* Parse ssid=...&pass=... */
+    
     char ssid[33] = {0}, pass[65] = {0};
     char *s = strstr(buf, "ssid=");
     if (!s) { httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no ssid"); return ESP_FAIL; }
@@ -121,6 +106,7 @@ static esp_err_t connect_handler(httpd_req_t *req)
         } else ssid[i] = s[i];
     }
     ssid[slen] = 0;
+    
     char *p = strstr(buf, "pass=");
     if (p) {
         p += 5;
@@ -140,7 +126,6 @@ static esp_err_t connect_handler(httpd_req_t *req)
     settings_set_wifi(ssid, pass);
     s_status = WIFI_STATUS_CONNECTING_TO_AP;
 
-    /* Kick off connection (non-blocking) */
     wifi_config_t wcfg = {0};
     strncpy((char *)wcfg.sta.ssid, ssid, sizeof(wcfg.sta.ssid));
     strncpy((char *)wcfg.sta.password, pass, sizeof(wcfg.sta.password));
@@ -174,36 +159,6 @@ static void stop_server(void)
     if (s_server) { httpd_stop(s_server); s_server = NULL; }
 }
 
-static esp_err_t ap_start(void)
-{
-    esp_netif_init();
-    esp_event_loop_create_default();
-
-    s_ap_netif = esp_netif_create_default_wifi_ap();
-    s_sta_netif = esp_netif_create_default_wifi_sta();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&cfg);
-    esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, (esp_event_handler_t)dispatch_wifi_event, NULL);
-    esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, (esp_event_handler_t)dispatch_wifi_event, NULL);
-
-    esp_wifi_set_mode(WIFI_MODE_APSTA);
-
-    wifi_config_t ap_cfg = {0};
-    strncpy((char *)ap_cfg.ap.ssid, s_ap_ssid, sizeof(ap_cfg.ap.ssid));
-    ap_cfg.ap.ssid_len = strlen(s_ap_ssid);
-    ap_cfg.ap.channel = 1;
-    ap_cfg.ap.max_connection = 4;
-    ap_cfg.ap.authmode = WIFI_AUTH_OPEN;
-    esp_wifi_set_config(WIFI_IF_AP, &ap_cfg);
-    esp_wifi_start();
-
-    ESP_LOGI(TAG, "AP %s ready", s_ap_ssid);
-    s_status = WIFI_STATUS_AP_READY;
-    start_server();
-    return ESP_OK;
-}
-
 static void dispatch_wifi_event(int32_t event_id, void *event_data)
 {
     if (event_id == WIFI_EVENT_STA_CONNECTED) {
@@ -220,25 +175,96 @@ static void dispatch_wifi_event(int32_t event_id, void *event_data)
                 s_status = WIFI_STATUS_FAILED;
             }
         }
+        /* Auto reconnect if WiFi is enabled and AP is not running */
+        if (settings_get()->wifi_enable && !s_ap_started) {
+            esp_wifi_connect();
+        }
     } else if (event_id == IP_EVENT_STA_GOT_IP) {
         s_status = WIFI_STATUS_CONNECTED;
     }
 }
 
-void wifi_manager_start(void)
+void wifi_manager_init(void)
 {
-    if (s_started) return;
-    s_started = true;
-    ap_start();
+    esp_netif_init();
+    esp_event_loop_create_default();
+    s_ap_netif = esp_netif_create_default_wifi_ap();
+    s_sta_netif = esp_netif_create_default_wifi_sta();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    esp_wifi_init(&cfg);
+    esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, (esp_event_handler_t)dispatch_wifi_event, NULL);
+    esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, (esp_event_handler_t)dispatch_wifi_event, NULL);
+
+    if (settings_get()->wifi_enable) {
+        esp_wifi_set_mode(WIFI_MODE_STA);
+        esp_wifi_start();
+        if (settings_get()->wifi_ssid[0]) {
+            wifi_config_t wcfg = {0};
+            strncpy((char *)wcfg.sta.ssid, settings_get()->wifi_ssid, sizeof(wcfg.sta.ssid));
+            strncpy((char *)wcfg.sta.password, settings_get()->wifi_pass, sizeof(wcfg.sta.password));
+            esp_wifi_set_config(WIFI_IF_STA, &wcfg);
+            esp_wifi_connect();
+        }
+    }
 }
 
-void wifi_manager_stop(void)
+void wifi_manager_set_enable(bool enable)
 {
-    if (!s_started) return;
+    if (enable) {
+        esp_wifi_set_mode(s_ap_started ? WIFI_MODE_APSTA : WIFI_MODE_STA);
+        esp_wifi_start();
+        if (settings_get()->wifi_ssid[0] && !s_ap_started) {
+            wifi_config_t wcfg = {0};
+            strncpy((char *)wcfg.sta.ssid, settings_get()->wifi_ssid, sizeof(wcfg.sta.ssid));
+            strncpy((char *)wcfg.sta.password, settings_get()->wifi_pass, sizeof(wcfg.sta.password));
+            esp_wifi_set_config(WIFI_IF_STA, &wcfg);
+            esp_wifi_connect();
+        }
+    } else {
+        wifi_manager_stop_ap();
+        esp_wifi_disconnect();
+        esp_wifi_stop();
+        s_status = WIFI_STATUS_AP_STARTING; /* reset status */
+    }
+}
+
+void wifi_manager_start_ap(void)
+{
+    if (s_ap_started) return;
+    s_ap_started = true;
+    
+    esp_wifi_set_mode(WIFI_MODE_APSTA);
+    
+    wifi_config_t ap_cfg = {0};
+    strncpy((char *)ap_cfg.ap.ssid, s_ap_ssid, sizeof(ap_cfg.ap.ssid));
+    ap_cfg.ap.ssid_len = strlen(s_ap_ssid);
+    ap_cfg.ap.channel = 1;
+    ap_cfg.ap.max_connection = 4;
+    ap_cfg.ap.authmode = WIFI_AUTH_OPEN;
+    esp_wifi_set_config(WIFI_IF_AP, &ap_cfg);
+    
+    esp_wifi_start();
+    esp_wifi_disconnect(); /* prevent auto-reconnect from stealing focus */
+
+    s_status = WIFI_STATUS_AP_READY;
+    start_server();
+}
+
+void wifi_manager_stop_ap(void)
+{
+    if (!s_ap_started) return;
     stop_server();
-    esp_wifi_stop();
-    esp_wifi_deinit();
-    s_started = false;
+    s_ap_started = false;
+    
+    if (settings_get()->wifi_enable) {
+        esp_wifi_set_mode(WIFI_MODE_STA);
+        if (settings_get()->wifi_ssid[0]) {
+            esp_wifi_connect();
+        }
+    } else {
+        esp_wifi_stop();
+    }
 }
 
 wifi_status_t wifi_manager_get_status(void) { return s_status; }
@@ -246,10 +272,11 @@ const char *wifi_manager_ap_ssid(void) { return s_ap_ssid; }
 const char *wifi_manager_ap_url(void)  { return AP_URL; }
 
 #else
-/* Stub for PC simulator */
 static wifi_status_t s_status = WIFI_STATUS_AP_STARTING;
-void wifi_manager_start(void) { s_status = WIFI_STATUS_AP_READY; }
-void wifi_manager_stop(void) { s_status = WIFI_STATUS_AP_STARTING; }
+void wifi_manager_init(void) {}
+void wifi_manager_set_enable(bool enable) {}
+void wifi_manager_start_ap(void) { s_status = WIFI_STATUS_AP_READY; }
+void wifi_manager_stop_ap(void) { s_status = WIFI_STATUS_AP_STARTING; }
 wifi_status_t wifi_manager_get_status(void) { return s_status; }
 const char *wifi_manager_ap_ssid(void) { return "M5StickS3-Simulator"; }
 const char *wifi_manager_ap_url(void)  { return "http://192.168.4.1/"; }

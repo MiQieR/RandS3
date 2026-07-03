@@ -4,13 +4,13 @@ M5Stack StickS3 Duplication of Rand/0 - The Pocket Prophet
 
 ## Features
 
-- **Global Status Bar** – Immersive status bar showing time, WiFi status, and battery, consistent across all screens.
-- **Vertical Orientation UX** – 135x240 optimized vertical layout with long-press scrolling gesture support on lengthy texts.
+- **Global Status Bar** – Immersive status bar showing time, WiFi status (using native PNG assets), and battery, consistent across all screens.
+- **Vertical Orientation UX** – 135x240 optimized vertical layout with virtual scrolling to support unlimited menu items.
 - **Answer Book** (答案之书) – random bilingual answers with Fisher-Yates non-repeating shuffle.
 - **MBTI Advice** – browse 16 personality types with growth advice.
 - **Lucky Slots** – slot machine game with 3/4/5 reels, built-in IMU screen-rotation, and speaker sound effects.
-- **WiFi Provisioning** – AP mode (RandS3, no password), modern web-based WiFi setup with error status reporting.
-- **Power Management** - 3-stage adaptive sleep (Dim -> Screen Off -> Light Sleep) configurable via settings.
+- **WiFi Provisioning** – AP mode (RandS3, no password), modern web-based WiFi setup. Dedicated menu with global on/off toggles to save power.
+- **Power Management** - 3-stage adaptive sleep (Dim -> Screen Off -> Light Sleep) configurable via settings. Correct EXT1 wakeup sources and WiFi radio shutdown ensures minimal battery consumption during sleep.
 - **Settings** – language (EN/ZH), MBTI type, WiFi, lock screen timeout, scrolling button config, and dedicated Lucky Slots settings (difficulty, volume).
 
 ## Hardware
@@ -91,6 +91,7 @@ python3 "$ESPTOOL" \
 firmware/
 ├── platformio.ini          # PlatformIO config
 ├── build_and_merge.sh      # Build + merge for M5Burner
+├── gen_font.sh      				# Generates custom C-format font file for LVGL GUI library
 ├── src/
 │   ├── lv_conf.h           # LVGL config
 │   ├── main.cpp            # Arduino entry (M5Unified + LVGL init)
@@ -111,10 +112,6 @@ firmware/
 │           ├── screen_slots.c/h
 │           ├── screen_settings.c/h
 │           └── screen_wifi.c/h
-├── simulator/              # PC simulator (SDL2)
-│   ├── CMakeLists.txt
-│   ├── main_sim.c
-│   └── test_auto.c
 ├── components/
 │   ├── lvgl/               # LVGL v8.3 source (for ESP-IDF build)
 │   └── lv_conf.h           # LVGL config (for ESP-IDF build)

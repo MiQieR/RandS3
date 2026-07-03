@@ -19,8 +19,10 @@ typedef enum {
     WIFI_STATUS_WRONG_PASSWORD
 } wifi_status_t;
 
-void            wifi_manager_start(void);
-void            wifi_manager_stop(void);
+void            wifi_manager_init(void);
+void            wifi_manager_set_enable(bool enable);
+void            wifi_manager_start_ap(void);
+void            wifi_manager_stop_ap(void);
 wifi_status_t   wifi_manager_get_status(void);
 const char     *wifi_manager_ap_ssid(void);
 const char     *wifi_manager_ap_url(void);    /* e.g. "http://192.168.4.1/" */

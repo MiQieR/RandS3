@@ -14,6 +14,11 @@ static const char *en_strings[STR_COUNT] = {
     [STR_SLOT_MACHINE]   = "Slot Machine",
     [STR_SETTINGS]       = "Settings",
     [STR_LANGUAGE]       = "Language",
+    [STR_THEME]          = "Theme",
+    [STR_THEME_DEFAULT]  = "Default",
+    [STR_THEME_APPLE]    = "Apple",
+    [STR_THEME_GITHUB]   = "GitHub Dark",
+    [STR_THEME_CYBER]    = "Cyber",
     [STR_WIFI_CONNECT]   = "WiFi",
     [STR_MBTI_TYPE]      = "MBTI",
     [STR_CLICK_TO_SEE]   = "Press to reveal",
@@ -53,6 +58,12 @@ static const char *en_strings[STR_COUNT] = {
     [STR_LOCK_SCREEN]    = "Lock Scrn",
     [STR_WRONG_PASSWORD] = "Wrong Password",
     [STR_CONNECT_FAILED] = "Connect Failed",
+    [STR_WIFI_HINT_1]    = "1. Connect Wi-Fi:",
+    [STR_WIFI_HINT_2]    = "2. Open in browser:",
+    [STR_WIFI_ON]        = "On",
+    [STR_WIFI_OFF]       = "Off",
+    [STR_WIFI_CONFIG]    = "Start AP Config",
+    [STR_DISCONNECTED]   = "Disconnected",
 };
 
 /* ---------- Chinese strings (UTF-8) ---------- */
@@ -63,7 +74,12 @@ static const char *zh_strings[STR_COUNT] = {
     [STR_SLOT_MACHINE]   = "\xe8\x80\x81\xe8\x99\x8e\xe6\x9c\xba",
     [STR_SETTINGS]       = "\xe8\xae\xbe\xe7\xbd\xae",
     [STR_LANGUAGE]       = "\xe8\xaf\xad\xe8\xa8\x80",
-    [STR_WIFI_CONNECT]   = "WiFi \xe8\xbf\x9e\xe6\x8e\xa5",
+    [STR_THEME]          = "\xe4\xb8\xbb\xe9\xa2\x98",
+    [STR_THEME_DEFAULT]  = "\xe9\xbb\x98\xe8\xae\xa4",
+    [STR_THEME_APPLE]    = "\xe8\x8b\xb9\xe6\x9e\x9c\xe9\xa3\x8e",
+    [STR_THEME_GITHUB]   = "GitHub Dark",
+    [STR_THEME_CYBER]    = "Cyber",
+    [STR_WIFI_CONNECT]   = "WiFi",
     [STR_MBTI_TYPE]      = "MBTI",
     [STR_CLICK_TO_SEE]   = "\xe6\x8c\x89\xe4\xb8\x8b\xe7\xa1\xae\xe8\xae\xa4\xe7\xad\x94\xe6\xa1\x88",
     [STR_TAP_FOR_ANSWER] = "\xe6\x8c\x89\xe4\xb8\x8b\xe7\xa1\xae\xe8\xae\xa4\xe7\xad\x94\xe6\xa1\x88",
@@ -102,6 +118,12 @@ static const char *zh_strings[STR_COUNT] = {
     [STR_LOCK_SCREEN]    = "锁屏时间",
     [STR_WRONG_PASSWORD] = "密码错误",
     [STR_CONNECT_FAILED] = "连接失败",
+    [STR_WIFI_HINT_1]    = "1. 连接此 Wi-Fi:",
+    [STR_WIFI_HINT_2]    = "2. 打开浏览器:",
+    [STR_WIFI_ON]        = "开启",
+    [STR_WIFI_OFF]       = "关闭",
+    [STR_WIFI_CONFIG]    = "启动配网模式",
+    [STR_DISCONNECTED]   = "未连接",
 };
 
 const char *i18n_str(str_id_t id)

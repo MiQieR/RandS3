@@ -1,4 +1,5 @@
 #include "sys_info.h"
+#include "esp_wifi.h"
 #include <M5Unified.h>
 #include <WiFi.h>
 #include <time.h>
@@ -43,8 +44,14 @@ void sys_info_set_brightness(int brightness)
 
 void sys_info_light_sleep(void)
 {
-    // Use M5Unified's built-in light sleep which automatically configures button wakeups
-    M5.Power.lightSleep(0, true);
+    // Disconnect WiFi to save power during sleep
+    esp_wifi_disconnect();
+    esp_wifi_stop();
+
+    // Enable ext1 wakeup on GPIO 47 and 48 (Button A and B on StickS3, active LOW)
+    esp_sleep_enable_ext1_wakeup((1ULL << 47) | (1ULL << 48), ESP_EXT1_WAKEUP_ANY_LOW);
+
+    M5.Power.lightSleep(0, false);
 }
 
 }

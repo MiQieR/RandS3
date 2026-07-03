@@ -25,7 +25,7 @@ static bool is_dimmed = false;
 
 static lv_obj_t *top_bar = NULL;
 static lv_obj_t *time_lbl = NULL;
-static lv_obj_t *wifi_lbl = NULL;
+static lv_obj_t *wifi_icon = NULL;
 static lv_obj_t *batt_lbl = NULL;
 static lv_timer_t *status_timer = NULL;
 
@@ -62,7 +62,10 @@ static void update_status_bar(lv_timer_t *t)
     lv_label_set_text(time_lbl, buf);
 
     bool wifi = sys_info_get_wifi_connected();
-    lv_label_set_text(wifi_lbl, wifi ? LV_SYMBOL_WIFI : "");
+    if (wifi_icon) {
+        if (wifi) lv_obj_clear_flag(wifi_icon, LV_OBJ_FLAG_HIDDEN);
+        else      lv_obj_add_flag(wifi_icon, LV_OBJ_FLAG_HIDDEN);
+    }
 
     int batt = sys_info_get_battery();
     lv_label_set_text_fmt(batt_lbl, "%d%%", batt);
@@ -89,6 +92,9 @@ static void update_status_bar(lv_timer_t *t)
         sys_info_set_brightness(100);
         is_screen_off = false;
         is_dimmed = false;
+        if (settings_get()->wifi_enable) {
+            wifi_manager_set_enable(true);
+        }
     }
 }
 
@@ -117,11 +123,11 @@ void app_manager_init(void)
     lv_obj_align(batt_lbl, LV_ALIGN_RIGHT_MID, -4, 0);
     lv_label_set_text(batt_lbl, "100%");
 
-    wifi_lbl = lv_label_create(top_bar);
-    lv_obj_set_style_text_color(wifi_lbl, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(wifi_lbl, &lv_font_montserrat_14, 0);
-    lv_obj_align(wifi_lbl, LV_ALIGN_RIGHT_MID, -40, 0);
-    lv_label_set_text(wifi_lbl, "");
+    extern const lv_img_dsc_t img_wifi_png;
+    wifi_icon = lv_img_create(top_bar);
+    lv_img_set_src(wifi_icon, &img_wifi_png);
+    lv_obj_align(wifi_icon, LV_ALIGN_RIGHT_MID, -40, 0);
+    lv_obj_add_flag(wifi_icon, LV_OBJ_FLAG_HIDDEN);
 
     status_timer = lv_timer_create(update_status_bar, 1000, NULL);
     update_status_bar(status_timer);
