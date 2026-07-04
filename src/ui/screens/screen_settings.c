@@ -23,13 +23,13 @@ extern void screen_wifi_register(void);
 
 /* ── Layout constants ────────────────────────────────────────── */
 #define ROW_COUNT    7      /* total setting rows */
-#define VISIBLE_ROWS 6      /* rows that fit on screen (44 + 5*32 + 26 = 230 < 240) */
+#define VISIBLE_ROWS 5      /* rows that fit on screen */
 #define ROW_H        26     /* row widget height px */
 #define ROW_STEP     32     /* row step (height + gap) px */
 #define ROWS_START_Y 44     /* y of first visible row */
 
 /* ── Row index map ───────────────────────────────────────────── */
-/* 0=lang, 1=theme, 2=mbti, 3=wifi, 4=slot_settings, 5=scroll_btn, 6=lock_screen */
+/* 0=lang, 1=theme, 2=mbti, 3=wifi, 4=difficulty, 5=volume, 6=lock_screen */
 
 /* ── State ───────────────────────────────────────────────────── */
 static lv_obj_t *root       = NULL;
@@ -47,6 +47,8 @@ static const char *lock_times[4]  = { "15s", "30s", "1m", "2m" };
 static const str_id_t theme_names[4] = {
     STR_THEME_DEFAULT, STR_THEME_APPLE, STR_THEME_GITHUB, STR_THEME_CYBER
 };
+static const str_id_t diff_names[3] = { STR_HARD, STR_EASY, STR_MEDIUM };
+static const str_id_t vol_names[4]  = { STR_VOL_MUTE, STR_VOL_LOW, STR_VOL_MED, STR_VOL_HIGH };
 
 /* ── Update scroll_offset to keep selected in the viewport ────── */
 static void clamp_scroll(void)
@@ -83,12 +85,15 @@ static void render(void)
     lv_label_set_text(row_values[3],
         settings_get()->wifi_ssid[0] ? settings_get()->wifi_ssid : "-");
 
-    lv_label_set_text(row_labels[4], i18n_str(STR_SLOT_SETTINGS));
-    lv_label_set_text(row_values[4], ">");
+    lv_label_set_text(row_labels[4], i18n_str(STR_DIFFICULTY));
+    int d = settings_get()->slot_difficulty;
+    if (d < 0 || d > 2) d = 1;
+    lv_label_set_text(row_values[4], i18n_str(diff_names[d]));
 
-    lv_label_set_text(row_labels[5], i18n_str(STR_SCROLL_BTN));
-    lv_label_set_text(row_values[5],
-        settings_get()->scroll_btn ? i18n_str(STR_BTN_A) : i18n_str(STR_BTN_B));
+    lv_label_set_text(row_labels[5], i18n_str(STR_VOLUME));
+    int v = settings_get()->sys_volume;
+    if (v < 0 || v > 3) v = 2;
+    lv_label_set_text(row_values[5], i18n_str(vol_names[v]));
 
     lv_label_set_text(row_labels[6], i18n_str(STR_LOCK_SCREEN));
     int ls = settings_get()->lock_screen_time;
@@ -136,6 +141,12 @@ static void on_input_timer(lv_timer_t *t)
         render();
         return;
     }
+    if (ev == INPUT_PREV) {
+        selected = (selected + ROW_COUNT - 1) % ROW_COUNT;
+        clamp_scroll();
+        render();
+        return;
+    }
     if (ev == INPUT_CONFIRM) {
         switch (selected) {
         case 0: {
@@ -163,12 +174,15 @@ static void on_input_timer(lv_timer_t *t)
             screen_wifi_register();
             app_manager_show(SCREEN_WIFI);
             break;
-        case 4:
-            app_manager_show(SCREEN_SLOT_SETTINGS);
+        case 4: {
+            int d = (settings_get()->slot_difficulty + 1) % 3;
+            settings_set_slot_difficulty(d);
+            render();
             break;
+        }
         case 5: {
-            int b = settings_get()->scroll_btn ^ 1;
-            settings_set_scroll_btn(b);
+            int v = (settings_get()->sys_volume + 1) % 4;
+            settings_set_sys_volume(v);
             render();
             break;
         }

@@ -13,10 +13,11 @@
 #include "screen_mbti.h"
 #include "screen_slots.h"
 #include "screen_settings.h"
-#include "screen_slot_settings.h"
 #include "screen_wifi.h"
+#include "screen_dice.h"
 #include "sys_info.h"
 #include "settings.h"
+#include "wifi_manager.h"
 #include <stdio.h>
 
 static uint32_t last_interaction_tick = 0;
@@ -39,8 +40,8 @@ static void (*create_fns[SCREEN_COUNT])(lv_obj_t *parent) = {
     [SCREEN_MBTI]    = screen_mbti_create,
     [SCREEN_SLOTS]   = screen_slots_create,
     [SCREEN_SETTINGS]= screen_settings_create,
-    [SCREEN_SLOT_SETTINGS] = screen_slot_settings_create,
     [SCREEN_WIFI]    = screen_wifi_create,
+    [SCREEN_DICE]    = screen_dice_create,
 };
 
 static void (*destroy_fns[SCREEN_COUNT])(void) = {
@@ -49,8 +50,8 @@ static void (*destroy_fns[SCREEN_COUNT])(void) = {
     [SCREEN_MBTI]    = screen_mbti_destroy,
     [SCREEN_SLOTS]   = screen_slots_destroy,
     [SCREEN_SETTINGS]= screen_settings_destroy,
-    [SCREEN_SLOT_SETTINGS] = screen_slot_settings_destroy,
     [SCREEN_WIFI]    = screen_wifi_destroy,
+    [SCREEN_DICE]    = screen_dice_destroy,
 };
 
 static void update_status_bar(lv_timer_t *t)

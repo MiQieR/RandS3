@@ -102,6 +102,10 @@ void ui_theme_init(void) {
         png_assets_h = """#pragma once
 #include "lvgl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 """
         png_assets_c = """#include "png_assets.h"
 
@@ -132,6 +136,11 @@ const lv_img_dsc_t {var_name} = {{
     .data_size = {len(data)},
     .data = {var_name}_data
 }};
+"""
+        png_assets_h += """
+#ifdef __cplusplus
+}
+#endif
 """
         with open(os.path.join(images_dir, "png_assets.h"), "w") as f:
             f.write(png_assets_h)

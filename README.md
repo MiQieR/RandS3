@@ -9,9 +9,10 @@ M5Stack StickS3 Duplication of Rand/0 - The Pocket Prophet
 - **Answer Book** (答案之书) – random bilingual answers with Fisher-Yates non-repeating shuffle.
 - **MBTI Advice** – browse 16 personality types with growth advice.
 - **Lucky Slots** – slot machine game with 3/4/5 reels, built-in IMU screen-rotation, and speaker sound effects.
+- **Dice Roller** – 1/2/3 virtual dice with physics animation and sound, activated by button or shaking the device.
 - **WiFi Provisioning** – AP mode (RandS3, no password), modern web-based WiFi setup. Dedicated menu with global on/off toggles to save power.
-- **Power Management** - 3-stage adaptive sleep (Dim -> Screen Off -> Light Sleep) configurable via settings. Correct EXT1 wakeup sources and WiFi radio shutdown ensures minimal battery consumption during sleep.
-- **Settings** – language (EN/ZH), MBTI type, WiFi, lock screen timeout, scrolling button config, and dedicated Lucky Slots settings (difficulty, volume).
+- **Power Management** - 3-stage adaptive sleep (Dim -> Screen Off -> Light Sleep) configurable via settings. Correct EXT1 wakeup sources and WiFi radio shutdown ensures minimal battery consumption during sleep. Zero background audio noise.
+- **Settings** – language (EN/ZH), MBTI type, WiFi, lock screen timeout, device volume, and slot difficulty.
 
 ## Hardware
 
@@ -25,7 +26,9 @@ M5Stack StickS3 Duplication of Rand/0 - The Pocket Prophet
 | Action | Button |
 |--------|--------|
 | Confirm / Select | Front (short press) |
+| Scroll | Front (long press) |
 | Next item | Side (short press) |
+| Previous item | Side (double click) |
 | Back / Exit | Side (long press) |
 
 ## Build & Flash

@@ -14,8 +14,8 @@ typedef enum {
     SCREEN_MBTI,
     SCREEN_SLOTS,
     SCREEN_SETTINGS,
-    SCREEN_SLOT_SETTINGS,
     SCREEN_WIFI,
+    SCREEN_DICE,
     SCREEN_COUNT
 } screen_id_t;
 

@@ -55,6 +55,12 @@ typedef enum {
     STR_YOU_WIN,
     STR_NO_LUCK,
     STR_SLOT_SETTINGS,
+    STR_VOLUME,
+    STR_STATUS,
+    STR_VOL_MUTE,
+    STR_VOL_LOW,
+    STR_VOL_MED,
+    STR_VOL_HIGH,
     STR_SCROLL_BTN,
     STR_BTN_A,
     STR_BTN_B,
@@ -67,10 +73,19 @@ typedef enum {
     STR_WIFI_OFF,
     STR_WIFI_CONFIG,
     STR_DISCONNECTED,
+    STR_DICE,
     STR_COUNT /* must be last */
 } str_id_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 const char *i18n_str(str_id_t id);
 void        i18n_set_language(language_t lang);
 language_t  i18n_get_language(void);
 void        i18n_init(void);
+
+#ifdef __cplusplus
+}
+#endif

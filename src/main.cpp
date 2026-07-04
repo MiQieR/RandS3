@@ -57,36 +57,32 @@ static void poll_buttons(void)
 {
     M5.update();
 
-    int scroll = settings_get()->scroll_btn;
-
     /* 前按键 (BtnA / GPIO11) */
-    if (scroll == 1) {
-        if (M5.BtnA.isPressed() && M5.BtnA.pressedFor(300)) {
-            app_manager_set_input(INPUT_SCROLL);
-        } else if (M5.BtnA.wasReleased() && !M5.BtnA.wasHold()) {
-            app_manager_set_input(INPUT_CONFIRM);
-        }
-    } else {
-        if (M5.BtnA.wasHold()) {
-            app_manager_set_input(INPUT_BACK);
-        } else if (M5.BtnA.wasClicked()) {
-            app_manager_set_input(INPUT_CONFIRM);
-        }
+    if (M5.BtnA.isPressed() && M5.BtnA.pressedFor(300)) {
+        app_manager_set_input(INPUT_SCROLL);
+    } else if (M5.BtnA.wasReleased() && !M5.BtnA.wasHold()) {
+        app_manager_set_input(INPUT_CONFIRM);
     }
 
     /* 侧按键 (BtnB / GPIO12) */
-    if (scroll == 0) {
-        if (M5.BtnB.isPressed() && M5.BtnB.pressedFor(300)) {
-            app_manager_set_input(INPUT_SCROLL);
-        } else if (M5.BtnB.wasReleased() && !M5.BtnB.wasHold()) {
-            app_manager_set_input(INPUT_NEXT);
+    static uint32_t b_release_time = 0;
+    static int b_click_count = 0;
+
+    if (M5.BtnB.wasHold()) {
+        app_manager_set_input(INPUT_BACK);
+        b_click_count = 0;
+    } else if (M5.BtnB.wasReleased() && !M5.BtnB.wasHold()) {
+        b_click_count++;
+        b_release_time = millis();
+        if (b_click_count >= 2) {
+            app_manager_set_input(INPUT_PREV);
+            b_click_count = 0;
         }
-    } else {
-        if (M5.BtnB.wasHold()) {
-            app_manager_set_input(INPUT_BACK);
-        } else if (M5.BtnB.wasClicked()) {
-            app_manager_set_input(INPUT_NEXT);
-        }
+    }
+
+    if (b_click_count == 1 && (millis() - b_release_time > 220)) {
+        app_manager_set_input(INPUT_NEXT);
+        b_click_count = 0;
     }
 }
 
@@ -157,5 +153,14 @@ void loop()
     } else {
         lv_timer_handler();
     }
+    
+    static bool speaker_active = false;
+    if (M5.Speaker.isPlaying()) {
+        speaker_active = true;
+    } else if (speaker_active) {
+        M5.Speaker.end();
+        speaker_active = false;
+    }
+    
     delay(5);
 }

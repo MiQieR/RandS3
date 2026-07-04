@@ -48,10 +48,20 @@ void sys_info_light_sleep(void)
     esp_wifi_disconnect();
     esp_wifi_stop();
 
-    // Enable ext1 wakeup on GPIO 47 and 48 (Button A and B on StickS3, active LOW)
-    esp_sleep_enable_ext1_wakeup((1ULL << 47) | (1ULL << 48), ESP_EXT1_WAKEUP_ANY_LOW);
+    // Enable wakeup on GPIO 11 and 12 (Button A and B on StickS3, active LOW)
+    gpio_wakeup_enable(GPIO_NUM_11, GPIO_INTR_LOW_LEVEL);
+    gpio_wakeup_enable(GPIO_NUM_12, GPIO_INTR_LOW_LEVEL);
+    esp_sleep_enable_gpio_wakeup();
+    esp_sleep_enable_ext1_wakeup((1ULL << 11) | (1ULL << 12), ESP_EXT1_WAKEUP_ANY_LOW);
+
+    M5.Power.setLed(0);
+    M5.Power.setExtOutput(false);
 
     M5.Power.lightSleep(0, false);
+
+    // After waking up
+    M5.Power.setLed(255);
+    M5.Power.setExtOutput(true);
 }
 
 }

@@ -262,7 +262,7 @@ extern "C" void slots_loop(void)
             }
             
             int vol_map[4] = {0, 64, 128, 200};
-            int vol = settings_get()->slot_volume;
+            int vol = settings_get()->sys_volume;
             M5.Speaker.setVolume(vol_map[vol]);
             if (vol > 0) M5.Speaker.tone(1000, 50);
 
@@ -271,7 +271,7 @@ extern "C" void slots_loop(void)
             slots_obj[state - SLOTS_STOP_BASE].stop();
             
             int vol_map[4] = {0, 64, 128, 200};
-            int vol = settings_get()->slot_volume;
+            int vol = settings_get()->sys_volume;
             M5.Speaker.setVolume(vol_map[vol]);
             if (vol > 0) M5.Speaker.tone(1000, 50);
             
@@ -290,7 +290,7 @@ extern "C" void slots_loop(void)
         if (stopAll) {
             bool isWin = (symbol >= 0);
             int vol_map[4] = {0, 64, 128, 200};
-            int vol = settings_get()->slot_volume;
+            int vol = settings_get()->sys_volume;
             M5.Speaker.setVolume(vol_map[vol]);
 
             if (isWin) {

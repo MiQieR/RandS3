@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 /* ── Constants ─────────────────────────────────────────────── */
-#define ITEM_COUNT   4
+#define ITEM_COUNT   5
 #define DOT_SIZE     6           /* inactive dot side length px   */
 #define DOT_ACTIVE_W 12          /* active dot width px           */
 #define DOT_GAP      6           /* gap between dots px           */
@@ -33,13 +33,14 @@ static bool           animating     = false;
 
 /* ── Menu item tables ───────────────────────────────────────── */
 static const str_id_t item_strs[ITEM_COUNT] = {
-    STR_ANSWER_BOOK, STR_MBTI_ADVICE, STR_SLOT_MACHINE, STR_SETTINGS
+    STR_ANSWER_BOOK, STR_MBTI_ADVICE, STR_DICE, STR_SLOT_MACHINE, STR_SETTINGS
 };
 static const screen_id_t item_screens[ITEM_COUNT] = {
-    SCREEN_ANSWER, SCREEN_MBTI, SCREEN_SLOTS, SCREEN_SETTINGS
+    SCREEN_ANSWER, SCREEN_MBTI, SCREEN_DICE, SCREEN_SLOTS, SCREEN_SETTINGS
 };
+extern const lv_img_dsc_t img_dice_png;
 static const lv_img_dsc_t *item_icons[ITEM_COUNT] = {
-    &img_book_png, &img_MBTI_png, &img_slot_machine_png, &img_setting_png
+    &img_book_png, &img_MBTI_png, &img_dice_png, &img_slot_machine_png, &img_setting_png
 };
 
 /* ── Helpers ────────────────────────────────────────────────── */
@@ -102,22 +103,24 @@ static void anim_done_cb(lv_anim_t *a)
     animating = false;
 }
 
-static void slide_to(int next_idx)
+static void slide_to(int next_idx, bool forward)
 {
-    if (animating) return;
     animating = true;
 
     lv_obj_t *cont_old = cont_active;
     cont_active = create_page(next_idx);
 
-    /* Place the new page off-screen to the right */
-    lv_obj_set_pos(cont_active, SCREEN_W, 0);
+    int start_x = forward ? SCREEN_W : -SCREEN_W;
+    int end_x = forward ? -SCREEN_W : SCREEN_W;
+
+    /* Place the new page off-screen to the right/left */
+    lv_obj_set_pos(cont_active, start_x, 0);
 
     /* Old page slides out to the left */
     lv_anim_t a1;
     lv_anim_init(&a1);
     lv_anim_set_var(&a1, cont_old);
-    lv_anim_set_values(&a1, 0, -SCREEN_W);
+    lv_anim_set_values(&a1, 0, end_x);
     lv_anim_set_time(&a1, ANIM_MS);
     lv_anim_set_exec_cb(&a1, (lv_anim_exec_xcb_t)lv_obj_set_x);
     lv_anim_set_path_cb(&a1, lv_anim_path_ease_in_out);
@@ -128,7 +131,7 @@ static void slide_to(int next_idx)
     lv_anim_t a2;
     lv_anim_init(&a2);
     lv_anim_set_var(&a2, cont_active);
-    lv_anim_set_values(&a2, SCREEN_W, 0);
+    lv_anim_set_values(&a2, start_x, 0);
     lv_anim_set_time(&a2, ANIM_MS);
     lv_anim_set_exec_cb(&a2, (lv_anim_exec_xcb_t)lv_obj_set_x);
     lv_anim_set_path_cb(&a2, lv_anim_path_ease_in_out);
@@ -146,7 +149,13 @@ static void on_input_timer(lv_timer_t *t)
     if (ev == INPUT_NEXT) {
         if (!animating) {
             selected = (selected + 1) % ITEM_COUNT;
-            slide_to(selected);
+            slide_to(selected, true);
+            update_dots();
+        }
+    } else if (ev == INPUT_PREV) {
+        if (!animating) {
+            selected = (selected + ITEM_COUNT - 1) % ITEM_COUNT;
+            slide_to(selected, false);
             update_dots();
         }
     } else if (ev == INPUT_CONFIRM) {

@@ -28,8 +28,7 @@ static const user_settings_t defaults = {
     /* mbti_index */      0,
     /* slot_reel_count */ 3,
     /* slot_difficulty */ 1,
-    /* slot_volume */     1,
-    /* scroll_btn */      1,
+    /* sys_volume */      1,
     /* lock_screen_time*/ 1, // default 30s
     /* theme_index */     0,
     /* wifi_ssid */       {0},
@@ -112,17 +111,10 @@ void settings_set_slot_difficulty(int diff)
     settings_save();
 }
 
-void settings_set_slot_volume(int vol)
+void settings_set_sys_volume(int vol)
 {
     if (!s_initialized) settings_init();
-    s_settings.slot_volume = vol;
-    settings_save();
-}
-
-void settings_set_scroll_btn(int btn)
-{
-    if (!s_initialized) settings_init();
-    s_settings.scroll_btn = btn ? 1 : 0;
+    s_settings.sys_volume = vol;
     settings_save();
 }
 

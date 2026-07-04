@@ -24,7 +24,7 @@ for fpath in files_to_read:
                     chars.add(char)
 
 # Extra common characters just in case
-extra = "设置返回退出老虎机答案之书建议语言连接中电量旋转停止按键右侧确认侧边长按下一项难度简单中等困难轮盘硬币长按向下滚动长按BtnAB"
+extra = "设置返回退出老虎机答案之书建议语言连接中电量旋转停止按键右侧确认侧边长按下一项难度简单中等困难轮盘硬币长按向下滚动长按BtnAB题默状态已小静音低高设备"
 for c in extra:
     chars.add(c)
 

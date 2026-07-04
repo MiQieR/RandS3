@@ -15,8 +15,7 @@ typedef struct {
     int  mbti_index;     /* 0..15 (INTJ..ESFP) */
     int  slot_reel_count; /* 3..5 */
     int  slot_difficulty; /* 0 = hard, 1 = easy, 2 = medium */
-    int  slot_volume;     /* 0=Mute, 1=Low, 2=Med, 3=High */
-    int  scroll_btn;      /* 0 = Btn B, 1 = Btn A */
+    int  sys_volume;      /* 0=Mute, 1=Low, 2=Med, 3=High */
     int  lock_screen_time;/* 0=15s, 1=30s, 2=60s, 3=120s */
     int  theme_index;     /* 0=Default, 1=Apple, 2=GitHub Dark, 3=Cyber */
     char wifi_ssid[32];
@@ -33,8 +32,7 @@ int              settings_get_language(void);
 void             settings_set_mbti(int idx);
 void             settings_set_slot_reel_count(int count);
 void             settings_set_slot_difficulty(int diff);
-void             settings_set_slot_volume(int vol);
-void             settings_set_scroll_btn(int btn);
+void             settings_set_sys_volume(int vol);
 void             settings_set_lock_screen_time(int time_idx);
 void             settings_set_theme(int idx);
 void             settings_set_wifi(const char *ssid, const char *pass);

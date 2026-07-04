@@ -48,7 +48,7 @@ static void render_menu(void)
     lv_label_set_text(row_values[0], en ? i18n_str(STR_WIFI_ON) : i18n_str(STR_WIFI_OFF));
 
     /* Row 1: Status */
-    lv_label_set_text(row_labels[1], "Status");
+    lv_label_set_text(row_labels[1], i18n_str(STR_STATUS));
     if (!en) {
         lv_label_set_text(row_values[1], i18n_str(STR_DISCONNECTED));
     } else {
